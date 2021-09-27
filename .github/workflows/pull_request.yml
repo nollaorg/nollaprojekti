@@ -2,7 +2,7 @@ name: Pulumi
 on:
   pull_request:
     paths:
-      - 'pulumi/**'
+      - '**/pulumi/**'
 jobs:
   preview:
     name: Preview
