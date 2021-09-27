@@ -2,7 +2,7 @@ name: Pulumi
 on:
   pull_request:
     paths:
-      - ${{ secrets.PULUMI_WORK_DIR }}
+      - 'pulumi/**'
 jobs:
   preview:
     name: Preview
