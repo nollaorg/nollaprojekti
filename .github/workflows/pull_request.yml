@@ -1,8 +1,6 @@
 name: Pulumi
 on:
-  pull_request:
-    paths:
-      - '**/pulumi/**'
+  - pull_request
 jobs:
   preview:
     name: Preview
