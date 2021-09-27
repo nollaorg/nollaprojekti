@@ -1,9 +1,8 @@
 name: Pulumi Destroy
 on:
-  workflow_dispatch:
   schedule:
     # * is a special character in YAML so you have to quote this string
-    - cron:  '15 16 * * *'
+    - cron:  '20 16 * * *'
 jobs:
   preview:
     name: Update
