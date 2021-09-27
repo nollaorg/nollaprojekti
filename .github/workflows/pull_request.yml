@@ -1,13 +1,15 @@
 name: Pulumi
 on:
-  - pull_request
+  pull_request:
+    paths:
+      - ${{ secrets.PULUMI_WORK_DIR }}
 jobs:
   preview:
     name: Preview
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./pulumi
+        working-directory: ${{ secrets.PULUMI_WORK_DIR }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
@@ -24,7 +26,7 @@ jobs:
         with:
           command: preview
           stack-name: dev
-          work-dir: ./pulumi
+          work-dir: ${{ secrets.PULUMI_WORK_DIR }}
           comment-on-pr: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
