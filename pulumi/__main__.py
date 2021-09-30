@@ -170,7 +170,7 @@ bastion = aws.ec2.Instance('bastion',
                            vpc_security_group_ids=[bastion_sg.id],
                            subnet_id=public_subnet[0].id,
                            ami=ami.id,
-                           key_name=key._name,
+                           key_name=key.key_name,
                            associate_public_ip_address=True,
                            tags={
                                "Name": "bastion",
