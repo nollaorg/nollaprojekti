@@ -30,7 +30,14 @@ bastion_sg = aws.ec2.SecurityGroup('bastion-sg',
                                        from_port=22,
                                        to_port=22,
                                        cidr_blocks=['0.0.0.0/0'],
-                                   )])
+                                   )],
+                                   egress=[aws.ec2.SecurityGroupEgressArgs(
+                                           from_port=0,
+                                           to_port=0,
+                                           protocol="-1",
+                                           cidr_blocks=["0.0.0.0/0"],
+                                           ipv6_cidr_blocks=["::/0"],
+                                           )],)
 
 web_sg = aws.ec2.SecurityGroup('web-sg',
                                description='Enable HTTP access',
@@ -50,7 +57,14 @@ web_sg = aws.ec2.SecurityGroup('web-sg',
                                    protocol='tcp',
                                    from_port=22,
                                    to_port=22,
-                                   security_groups=[bastion_sg.id])])  # Allow ssh traffic from bastion
+                                   security_groups=[bastion_sg.id])],
+                               egress=[aws.ec2.SecurityGroupEgressArgs(
+                                   from_port=0,
+                                   to_port=0,
+                                   protocol="-1",
+                                   cidr_blocks=["0.0.0.0/0"],
+                                   ipv6_cidr_blocks=["::/0"],
+                               )],)  # Allow ssh traffic from bastion
 
 
 # Internet gateway for internet access
@@ -170,7 +184,7 @@ bastion = aws.ec2.Instance('bastion',
                            vpc_security_group_ids=[bastion_sg.id],
                            subnet_id=public_subnet[0].id,
                            ami=ami.id,
-                           key_name=key._name,
+                           key_name=key.key_name,
                            associate_public_ip_address=True,
                            tags={
                                "Name": "bastion",
