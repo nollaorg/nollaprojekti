@@ -22,15 +22,36 @@ vpc = aws.ec2.Vpc(
     cidr_block="10.0.0.0/16"
 )
 
-group = aws.ec2.SecurityGroup('test-web-sg',
-                              description='Enable HTTP access',
-                              vpc_id=vpc.id,
-                              ingress=[aws.ec2.SecurityGroupIngressArgs(
-                                  protocol='tcp',
-                                  from_port=80,
-                                  to_port=80,
-                                  cidr_blocks=['0.0.0.0/0'],
-                              )])
+bastion_sg = aws.ec2.SecurityGroup('bastion-sg',
+                                   description='Enable SSH access',
+                                   vpc_id=vpc.id,
+                                   ingress=[aws.ec2.SecurityGroupIngressArgs(
+                                       protocol='tcp',
+                                       from_port=22,
+                                       to_port=22,
+                                       cidr_blocks=['0.0.0.0/0'],
+                                   )])
+
+web_sg = aws.ec2.SecurityGroup('web-sg',
+                               description='Enable HTTP access',
+                               vpc_id=vpc.id,
+                               ingress=[aws.ec2.SecurityGroupIngressArgs(
+                                   protocol='tcp',
+                                   from_port=80,
+                                   to_port=80,
+                                   cidr_blocks=['0.0.0.0/0'],
+                               ), aws.ec2.SecurityGroupIngressArgs(
+                                   protocol='tcp',
+                                   from_port=443,
+                                   to_port=443,
+                                   cidr_blocks=['0.0.0.0/0'],
+                               ),
+                                   aws.ec2.SecurityGroupIngressArgs(
+                                   protocol='tcp',
+                                   from_port=22,
+                                   to_port=22,
+                                   security_groups=[bastion_sg.id])])  # Allow ssh traffic from bastion
+
 
 # Internet gateway for internet access
 igw = aws.ec2.InternetGateway(
@@ -119,7 +140,7 @@ for i in range(0, 2):
     )
 
 
-server = []
+webfront = []
 
 # Creates webfronts to each of the public subnets
 for i in range(0, webfront_count):
@@ -128,16 +149,32 @@ for i in range(0, webfront_count):
         to_subnet = 0
     else:
         to_subnet = 1
-    server.append(aws.ec2.Instance(f'webfront-{i}',
-                                   instance_type=size,
-                                   vpc_security_group_ids=[group.id],
-                                   user_data=user_data,
-                                   subnet_id=public_subnet[to_subnet].id,
-                                   ami=ami.id,
-                                   tags={
-                                       "Name": f"webfront-{i}",
-                                       "Role": "webfront"
-                                   }))
+    webfront.append(aws.ec2.Instance(f'webfront-{i}',
+                                     instance_type=size,
+                                     vpc_security_group_ids=[web_sg.id],
+                                     user_data=user_data,
+                                     subnet_id=public_subnet[to_subnet].id,
+                                     ami=ami.id,
+                                     tags={
+                                         "Name": f"webfront-{i}",
+                                         "Role": "webfront"
+                                     }))
+    pulumi.export(f'webfront{i}_ip', webfront[i].private_ip)
 
-    pulumi.export(f'public_ip_server{i}', server[i].public_ip)
-    pulumi.export(f'public_dns_server{i}', server[i].public_dns)
+# Key for accessing AWS EC2 instances
+key = aws.ec2.KeyPair("ec2_key", public_key=ec2_pub_key)
+
+# Create a bastion host
+bastion = aws.ec2.Instance('bastion',
+                           instance_type=size,
+                           vpc_security_group_ids=[bastion_sg.id],
+                           subnet_id=public_subnet[0].id,
+                           ami=ami.id,
+                           key_name=key._name,
+                           associate_public_ip_address=True,
+                           tags={
+                               "Name": "bastion",
+                               "Role": "bastion"
+                           })
+
+pulumi.export(f'bastion_public_ip{i}', bastion.public_ip)
