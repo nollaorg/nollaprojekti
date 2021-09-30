@@ -1,11 +1,13 @@
-name: Pulumi PR
+name: Pulumi Up
 on:
-  pull_request:
+  push:
+    branches:
+      - main
     paths:
       - '**/pulumi/**'
 jobs:
   preview:
-    name: Preview
+    name: Update
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,10 +26,8 @@ jobs:
       - run: pip install -r requirements.txt
       - uses: pulumi/actions@v3
         with:
-          command: preview
+          command: up
           stack-name: dev
           work-dir: ./pulumi
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}

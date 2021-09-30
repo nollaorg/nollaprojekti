@@ -1,11 +1,12 @@
-name: Pulumi PR
+name: Pulumi Destroy
 on:
-  pull_request:
-    paths:
-      - '**/pulumi/**'
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 21 * * *'
 jobs:
   preview:
-    name: Preview
+    name: Update
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -24,10 +25,8 @@ jobs:
       - run: pip install -r requirements.txt
       - uses: pulumi/actions@v3
         with:
-          command: preview
+          command: destroy
           stack-name: dev
           work-dir: ./pulumi
-          comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
           PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
