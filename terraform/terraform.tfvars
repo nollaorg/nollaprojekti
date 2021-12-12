@@ -1,1 +1,1 @@
-common_tag = "Nullproject"
+common_tag = "nullproject"
