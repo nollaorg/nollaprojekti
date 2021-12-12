@@ -52,6 +52,7 @@ jobs:
         working-directory: ${{ env.working-directory }}
 
       - name: Terraform show
+        if: github.event_name == 'pull_request'
         run: terraform show -json tfplan.binary > plan.json
         working-directory: ${{ env.working-directory }}
 
@@ -86,6 +87,7 @@ jobs:
       # Install the Infracost CLI, see https://github.com/infracost/actions/tree/master/setup
       # for other inputs such as version, and pricing-api-endpoint (for self-hosted users).
       - name: Setup Infracost
+        if: github.event_name == 'pull_request'
         uses: infracost/actions/setup@v1
         with:
           api-key: ${{ secrets.INFRACOST_API_KEY }}
@@ -94,6 +96,7 @@ jobs:
       # Multi-project/workspaces: https://www.infracost.io/docs/multi_project/config_file
       # Combine Infracost JSON files: https://www.infracost.io/docs/multi_project/report
       - name: Generate Infracost JSON
+        if: github.event_name == 'pull_request'
         run: infracost breakdown --path plan.json --format json --out-file /tmp/infracost.json
         working-directory: ${{ env.working-directory }}
         # Env vars can be set using the usual GitHub Actions syntax
@@ -103,6 +106,7 @@ jobs:
       # See https://github.com/infracost/actions/tree/master/comment
       # for other inputs such as target-type.
       - name: Post Infracost comment
+        if: github.event_name == 'pull_request'
         uses: infracost/actions/comment@v1
         with:
           path: /tmp/infracost.json
